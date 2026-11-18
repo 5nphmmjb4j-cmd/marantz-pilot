@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#E9EBEC">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Pilot Marantz">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<title>Pilot Marantz</title>
+<style>
+@font-face{font-family:"IBM Plex Sans";font-style:normal;font-weight:100 700;font-display:swap;src:url(fonts/ibm-plex-sans-latin-ext-wght-normal.woff2) format("woff2-variations");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"IBM Plex Sans";font-style:normal;font-weight:100 700;font-display:swap;src:url(fonts/ibm-plex-sans-latin-wght-normal.woff2) format("woff2-variations");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+:root{--bg:#E9EBEC;--surface:#FFFFFF;--soft:#F1F3F4;--border:#D3D8DB;--edge:#8A949B;--sep:#E1E4E6;
+--text:#17212B;--text2:#3E4A55;--text3:#5B6670;
+--blue:#0A84B8;--primary:#0F4C5C;--primary-h:#0B3C49;--primary-a:#08303A;--blue-l:#E3F0F4;--focus:rgba(10,132,184,.30);
+--ok:#2F7D4F;--ok-bg:#E4F1E8;--warn:#A15C00;--warn-bg:#FFF1D6;--err:#B3261E;--err-bg:#FBE7E5;
+--radius:14px;--radius-s:10px;
+--font:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);font-size:16px;line-height:1.45;overscroll-behavior:none}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;touch-action:manipulation}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.app{max-width:520px;margin:0 auto;height:100dvh;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
+/* nagłówek: duży tytuł w stylu iOS */
+.bar{display:flex;align-items:flex-end;justify-content:space-between;padding:10px 20px 6px}
+.bar h1{margin:0;font-size:30px;line-height:1.1;font-weight:700;letter-spacing:-.01em}
+.badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:2px 12px;font-size:13px;font-weight:600;line-height:24px;white-space:nowrap;background:var(--soft);color:var(--text2);border:1px solid var(--border)}
+.badge.ok{background:var(--ok-bg);color:var(--ok);border-color:#BFDCC9}
+.badge.bad{background:var(--err-bg);color:var(--err);border-color:#F1C2BE}
+.badge.warn{background:var(--warn-bg);color:var(--warn);border-color:#EBCB91}
+.alert{display:none;border-radius:var(--radius-s);padding:10px 14px;margin:0 16px 8px;font-size:14px;border:1px solid}
+.alert.show{display:block}
+.alert.warn{background:var(--warn-bg);color:var(--warn);border-color:#EBCB91}
+.alert .btn{margin-top:8px}
+.alert.bad{background:var(--err-bg);color:var(--err);border-color:#F1C2BE}
+/* karta i sekcje */
+.card{background:var(--surface);border-radius:var(--radius);padding:16px}
+.hero{margin:0 16px 4px;box-shadow:0 1px 0 var(--sep)}
+.hhd{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+.hhd .t{flex:1;min-width:0}
+.cap{font-size:13px;font-weight:600;color:var(--text3);text-transform:none}
+.sub{font-size:15px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pwr{width:44px;height:44px;border-radius:50%;border:0;background:var(--soft);color:var(--text3);display:inline-flex;align-items:center;justify-content:center;flex:none;transition:background .2s,color .2s}
+.pwr svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.pwr.on{background:var(--primary);color:#fff}
+.body{transition:opacity .2s}.off .body{opacity:.4;pointer-events:none}
+.vol{display:flex;align-items:baseline;gap:6px;margin:2px 0 0}
+.vol .n{font-size:52px;line-height:1.05;font-weight:500;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.vol .u{font-size:18px;color:var(--text3);font-weight:500}
+.vol .lbl{margin-left:auto;font-size:13px;color:var(--text3);font-weight:600}
+.vol .m{display:none;margin-left:auto}
+.muted .vol .m{display:inline-flex}.muted .vol .lbl{display:none}
+.muted .vol .n{color:var(--text3)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:44px;background:transparent;margin:0;touch-action:pan-y}
+input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:4px;background:linear-gradient(to right,var(--primary) var(--fill,0%),var(--border) var(--fill,0%))}
+input[type=range]::-moz-range-track{height:8px;border-radius:4px;background:var(--border)}
+input[type=range]::-moz-range-progress{height:8px;border-radius:4px;background:var(--primary)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:30px;height:30px;border-radius:50%;background:#fff;border:3px solid var(--primary);margin-top:-11px;box-shadow:0 2px 6px rgba(23,33,43,.2)}
+input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#fff;border:3px solid var(--primary)}
+.vrow{display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:8px;margin:4px 0 8px}
+.btn{min-height:44px;padding:0 16px;border-radius:var(--radius-s);border:0;background:var(--soft);font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:8px;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;transition:transform .12s,background .15s}
+.btn:active{transform:scale(.97);background:var(--border)}
+.btn.step{min-height:52px;font-size:22px}
+.btn.mute{min-height:52px}
+.btn.mute.on{background:var(--warn-bg);color:var(--warn);font-weight:600}
+.btn.pri{background:var(--primary);color:#fff}
+.btn.dark{background:var(--text);color:#fff}
+.btn.danger{background:var(--err-bg);color:var(--err);font-weight:600}
+.btn.danger.arm{background:var(--err);color:#fff}
+.btn.block{width:100%}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.pre{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px}
+.pre::-webkit-scrollbar{display:none}
+.chip{flex:none;min-height:36px;padding:0 14px;border-radius:999px;border:0;background:var(--soft);font-size:14px;font-weight:500;display:inline-flex;align-items:center;gap:6px;transition:transform .12s}
+.chip:active{transform:scale(.96)}
+.chip.on{background:var(--primary);color:#fff;font-weight:600}
+/* strony z zakładek */
+.pages{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px calc(112px + env(safe-area-inset-bottom))}
+.page{display:none}.page.show{display:block;animation:pgin .25s ease-out}
+@keyframes pgin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.gh{font-size:13px;font-weight:600;color:var(--text3);margin:18px 16px 6px;text-transform:uppercase;letter-spacing:.04em}
+.gh:first-child{margin-top:4px}
+.list{background:var(--surface);border-radius:var(--radius);overflow:hidden}
+.li{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:0 16px;border:0;background:none;text-align:left;font-size:16px;position:relative;transition:background .12s}
+.li+.li::before,.li.sp::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:1px solid var(--sep)}
+.li:active{background:var(--soft)}
+.li .lt{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li .ck{width:22px;text-align:center;color:var(--primary);font-weight:700;opacity:0}
+.li.on{font-weight:600}.li.on .ck{opacity:1}
+.sr>.li::before{display:none}
+.li .x{color:var(--text3);width:44px;height:44px;margin-right:-12px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%}
+.li[disabled]{opacity:.45;pointer-events:none}
+.note{font-size:13px;color:var(--text3);margin:6px 16px 0}
+.now{margin-bottom:4px}.now .nt{font-size:20px;font-weight:600;line-height:1.25;margin-top:4px}.now .ns{font-size:14px;color:var(--text3);margin-top:2px}
+.tn-f{font-size:44px;font-weight:500;letter-spacing:-.01em;font-variant-numeric:tabular-nums;line-height:1.1;margin-top:2px}.tn-f small{font-size:16px;color:var(--text3);font-weight:500}
+.tn-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.stp{display:flex;align-items:center;gap:10px;padding:6px 0}.stp>span{flex:1;font-size:16px}.stp b{min-width:64px;text-align:center;font-size:18px;font-variant-numeric:tabular-nums}.stp .btn{width:52px;padding:0}
+.empty{padding:16px;color:var(--text3);font-size:15px}
+.more{background:none;border:0;color:var(--blue);font-size:15px;padding:12px 16px;min-height:44px}
+.save{display:flex;gap:8px;margin-top:12px}
+.save input{flex:1;min-width:0;height:48px;border:0;border-radius:var(--radius-s);background:var(--surface);padding:0 14px}
+.save input:focus{outline:0;box-shadow:0 0 0 3px var(--focus)}
+.seg{display:flex;background:#DCE0E2;border-radius:10px;padding:2px;margin:0 0 4px}
+.seg a{flex:1;text-align:center;padding:8px 0;border-radius:8px;font-size:14px;font-weight:600;color:var(--text2);text-decoration:none}
+.seg a.on{background:#fff;color:var(--primary);box-shadow:0 1px 3px rgba(23,33,43,.15)}
+dialog{border:0;border-radius:16px;padding:20px;max-width:min(520px,92vw);box-shadow:0 8px 24px rgba(23,33,43,.14);color:var(--text);background:var(--surface)}
+dialog::backdrop{background:rgba(23,33,43,.45)}
+.toast{position:fixed;left:50%;bottom:calc(104px + env(safe-area-inset-bottom));transform:translate(-50%,12px);opacity:0;background:var(--text);color:#fff;padding:12px 16px;border-radius:var(--radius-s);font-size:15px;max-width:90vw;transition:opacity .2s,transform .2s;pointer-events:none;z-index:30}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.nav{position:fixed;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;padding:0 16px calc(10px + env(safe-area-inset-bottom));z-index:20}
+@media(prefers-reduced-motion:reduce){.page.show{animation:none}.toast,.btn,.chip{transition:none}}
+.li .rt{color:var(--text3);font-size:15px;white-space:nowrap}
+.li .chev{color:var(--edge);font-size:22px;line-height:1;margin-left:-4px}
+.back{border:0;background:none;color:var(--blue);font-size:17px;min-height:44px;padding:0 6px;margin:0 0 -4px -6px}
+.tlog{margin:18px 4px 0;font-size:13px;color:var(--text3)}
+.tlog summary{cursor:pointer;min-height:32px;display:flex;align-items:center}
+.tlog ol{margin:4px 0 0;padding-left:20px;max-height:180px;overflow:auto}
+.tlog li{margin:2px 0;font-variant-numeric:tabular-nums}
+dialog h3{margin:0 0 4px;font-size:20px}
+dialog p{margin:0 0 14px;color:var(--text2);font-size:15px}
+.hero.gone{display:none}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="bar"><h1>Pilot</h1><span class="badge" id="stat" role="status">Łączenie…</span></header>
+<div class="alert bad" id="banner" role="alert"></div>
+<div class="alert warn" id="updbar" role="status">Jest nowa wersja aplikacji. Zaktualizuję ją, gdy skończysz regulować.<br><button class="btn sm" id="updnow" type="button">Aktualizuj teraz</button></div>
+<section class="card hero" id="hero"></section>
+<div class="pages" id="pages">
+  <section class="page" data-page="listen" aria-label="Słuchaj">
+    <div class="gh">Wejście</div>
+    <div class="list" data-r="sources" data-z="main"></div>
+    <button class="more" data-act="more" data-z="main" hidden></button>
+    <div class="gh">Tryb dźwięku</div>
+    <div class="list" data-r="surrounds" data-z="main"></div>
+  </section>
+  <section class="page" data-page="radio" aria-label="Radio">
+    <div class="card now" id="nowcard" hidden><div class="cap">Teraz gra</div><div class="nt" id="nowTrack"></div><div class="ns" id="nowSub"></div></div>
+    <div class="gh">Stacje</div>
+    <div class="list" data-r="stations" data-z="main"></div>
+    <p class="note" data-r="nowline" data-z="main">Ulubione stacje z amplitunera. Ustawienie stacji trwa kilka sekund.</p>
+    <div class="gh">Tuner FM</div>
+    <div class="card" id="tunerCard">
+      <div class="cap" id="tnPre">Preset –</div>
+      <div class="tn-f"><span id="tnFreq">–</span> <small>MHz</small></div>
+      <div class="tn-btns" id="tnBtns">
+        <button class="btn" data-tn="preset_down">‹ Preset</button><button class="btn" data-tn="preset_up">Preset ›</button>
+        <button class="btn" data-tn="freq_down">− Strojenie</button><button class="btn" data-tn="freq_up">+ Strojenie</button>
+      </div>
+      <button class="btn pri block" id="tnOn" data-tn="on" style="margin-top:12px">Włącz tuner</button>
+    </div>
+    <div class="gh">Wejście</div>
+    <div class="list" data-r="sources" data-z="main"></div>
+    <button class="more" data-act="more" data-z="main" hidden></button>
+  </section>
+  <section class="page" data-page="scenes" aria-label="Sceny">
+    <div class="gh">Twoje sceny</div>
+    <div class="list" id="sceneList"></div>
+    <p class="note">Scena zapamiętuje stan stref: zasilanie, wejście, głośność, wyciszenie i tryb dźwięku.</p>
+    <div class="save">
+      <input id="sceneName" type="text" maxlength="40" placeholder="Nazwa, np. Wieczór" aria-label="Nazwa nowej sceny">
+      <button class="btn dark" id="sceneSave">Zapisz stan</button>
+    </div>
+  </section>
+  <section class="page" data-page="more" aria-label="Więcej">
+    <div data-view="root">
+      <div class="gh">Strefy</div>
+      <div class="list">
+        <button class="li" data-act="z2open"><span class="lt">Strefa 2</span><span class="rt" id="z2sub">–</span><span class="chev" aria-hidden="true">›</span></button>
+        <button class="li" data-act="sndopen"><span class="lt">Dźwięk</span><span class="rt" id="sndsub"></span><span class="chev" aria-hidden="true">›</span></button>
+      </div>
+      <div class="gh">Aplikacja</div>
+      <div class="list">
+        <button class="li" data-act="update"><span class="lt">Aktualizuj aplikację</span><span class="chev" aria-hidden="true">›</span></button>
+        <button class="li" data-act="versions"><span class="lt">Historia wersji</span><span class="rt" id="verTxt">–</span><span class="chev" aria-hidden="true">›</span></button>
+      </div>
+      <div style="margin-top:20px"><button class="btn danger block" id="standby">Wyłącz cały amplituner</button></div>
+      <p class="note" style="text-align:center">Marantz NR1602 · <span id="verFoot">Pilot</span></p>
+    </div>
+    <div data-view="sound" hidden>
+      <button class="back" data-act="sndback">‹ Więcej</button>
+      <div class="gh">Barwa dźwięku</div>
+      <div class="list"><button class="li" data-snd="tone" id="sndTone"><span class="lt">Regulacja tonów</span><span class="rt" id="sndToneV">–</span></button></div>
+      <div class="card" style="margin-top:8px">
+        <div class="stp"><span>Basy</span><button class="btn step" data-snd="bass" data-d="-1" aria-label="Basy mniej">−</button><b id="sndBass">0 dB</b><button class="btn step" data-snd="bass" data-d="1" aria-label="Basy więcej">+</button></div>
+        <div class="stp"><span>Soprany</span><button class="btn step" data-snd="treble" data-d="-1" aria-label="Soprany mniej">−</button><b id="sndTreble">0 dB</b><button class="btn step" data-snd="treble" data-d="1" aria-label="Soprany więcej">+</button></div>
+      </div>
+      <div class="gh">Timer uśpienia</div>
+      <div class="list" id="sndSleep"></div>
+      <div class="gh">Dynamic Volume</div>
+      <div class="list" id="sndDyn"></div>
+      <div class="gh">Dynamic EQ</div>
+      <div class="list"><button class="li" data-snd="dyneq" id="sndDynEq"><span class="lt">Dynamic EQ</span><span class="rt" id="sndDynEqV">–</span></button></div>
+      <p class="note">Ustawienia dotyczą strefy głównej. Basy i soprany działają po włączeniu regulacji tonów.</p>
+    </div>
+    <div data-view="zone2" hidden>
+      <button class="back" data-act="z2back">‹ Więcej</button>
+      <div class="gh">Strefa 2</div>
+      <div class="card" id="zone2"></div>
+      <div class="gh">Radio</div>
+      <div class="list" data-r="stations" data-z="zone2"></div>
+      <div class="gh">Wejście</div>
+      <div class="list" data-r="sources" data-z="zone2"></div>
+      <button class="more" data-act="more" data-z="zone2" hidden></button>
+    </div>
+  </section>
+</div>
+<nav class="nav" id="nav" aria-label="Główne menu"></nav>
+</div>
+<dialog id="verDlg"><h3>Historia wersji</h3><div id="verList"></div><button class="btn pri block" id="verClose" style="margin-top:12px">Zamknij</button></dialog>
+<div class="toast" id="toast" role="status"></div>
+<script>
+  var DEMO = /\/demo\/?$/.test(location.pathname);
+  if (DEMO) document.write('<script src="demo.js"><\/script>');
+</script>
+<script src="menu-a.js"></script>
+<script src="updater.js"></script>
+<script>
+"use strict";
+const $ = (s, r = document) => r.querySelector(s);
+const q = (zone, name) => document.querySelector(`[data-r="${name}"][data-z="${zone}"]`);
+const qa = (zone, name) => document.querySelectorAll(`[data-r="${name}"][data-z="${zone}"]`);
+const ZONES = ["main", "zone2"];
+const ZNAME = { main: "Strefa główna", zone2: "Strefa 2" };
+const PRESETS = [-60, -50, -40, -30, -20];
+const ICON = {
+  power: '<svg viewBox="0 0 24 24"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg>',
+  listen: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M7.8 7.8a6 6 0 0 0 0 8.4M16.2 7.8a6 6 0 0 1 0 8.4M4.9 4.9a10 10 0 0 0 0 14.2M19.1 4.9a10 10 0 0 1 0 14.2"/></svg>',
+  radio: '<svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="11" rx="2.5"/><path d="M7 9l10-5"/><circle cx="16" cy="14.5" r="2.2"/><path d="M6.5 13h4M6.5 16h4"/></svg>',
+  scenes: '<svg viewBox="0 0 24 24"><path d="M12 3l2.4 5.6L20 11l-5.6 2.4L12 19l-2.4-5.6L4 11l5.6-2.4z"/></svg>',
+  more: '<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg>'
+};
+const TABS = [
+  { id: "listen", label: "Słuchaj", icon: ICON.listen },
+  { id: "radio", label: "Radio", icon: ICON.radio },
+  { id: "scenes", label: "Sceny", icon: ICON.scenes },
+  { id: "more", label: "Więcej", icon: ICON.more },
+];
+let S = null, scenes = [];
+let radio = { stations: [], station: null, now: null }, radioBusy = false;
+const touched = { main: 0, zone2: 0 }, showAll = { main: false, zone2: false }, sender = {}, local = {};
+
+function fmtDb(v) { if (v == null) return "–"; const s = Math.abs(v).toFixed(1).replace(".", ","); return (v < 0 ? "−" : v > 0 ? "+" : "") + s; }
+function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.className = "toast show"; clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove("show"), 2600); }
+async function api(path, body) {
+  if (DEMO) return PilotDemo.api(path, body);
+  const opt = body === undefined ? {} : { method: "POST", headers: { "Content-Type": "application/json", "X-Requested-With": "marantz-pilot" }, body: JSON.stringify(body) };
+  const r = await fetch(path, opt); let j = {}; try { j = await r.json(); } catch (e) {}
+  if (!r.ok) throw new Error(j.error || ("HTTP " + r.status)); return j;
+}
+async function cmd(zone, c, value) {
+  try { await api("api/cmd", { zone, cmd: c, value }); setTimeout(refresh, 350); }
+  catch (e) { toast("✕ " + e.message); setTimeout(refresh, 200); }
+}
+
+// ---------- blok głośności (hero = strefa główna, karta = strefa 2) ----------
+function volBlock(zone) {
+  return `<div class="zone" data-zone="${zone}">
+    <div class="hhd"><div class="t"><div class="cap">${ZNAME[zone]}</div><div class="sub" data-r="sub" data-z="${zone}">–</div></div>
+      <button class="pwr" data-act="power" data-z="${zone}" aria-label="Włącz lub wyłącz: ${ZNAME[zone]}" aria-pressed="false">${ICON.power}</button></div>
+    <div class="body">
+      <div class="vol"><span class="n" data-r="vol" data-z="${zone}">–</span><span class="u">dB</span><span class="lbl">Głośność</span><span class="badge warn m">▲ Wyciszone</span></div>
+      <input type="range" min="-80" max="18" step="0.5" value="-60" data-r="slider" data-z="${zone}" aria-label="Głośność: ${ZNAME[zone]}">
+      <div class="vrow">
+        <button class="btn step" data-step="-1" data-z="${zone}" aria-label="Ciszej">−</button>
+        <button class="btn mute" data-act="mute" data-z="${zone}">Wycisz</button>
+        <button class="btn step" data-step="1" data-z="${zone}" aria-label="Głośniej">+</button>
+      </div>
+      <div class="pre" data-r="presets" data-z="${zone}"></div>
+    </div></div>`;
+}
+function build() {
+  $("#hero").innerHTML = volBlock("main");
+  $("#zone2").innerHTML = volBlock("zone2");
+  for (const zone of ZONES) {
+    const slider = q(zone, "slider");
+    slider._fill = () => slider.style.setProperty("--fill", ((slider.value - slider.min) / (slider.max - slider.min) * 100) + "%");
+    slider.addEventListener("input", () => { touched[zone] = Date.now(); slider._fill(); q(zone, "vol").textContent = fmtDb(+slider.value); queueVolume(zone, +slider.value); });
+    for (const b of document.querySelectorAll(`[data-step][data-z="${zone}"]`)) {
+      const step = +b.dataset.step; let t1, t2;
+      const go = () => {
+        const cur = (zone in local && local[zone] != null) ? local[zone] : (S && S[zone].volume);
+        if (cur == null) return;
+        const v = Math.max(-80, Math.min(18, cur + step * 0.5)); setLocalVol(zone, v); queueVolume(zone, v);
+      };
+      const stop = () => { clearTimeout(t1); clearInterval(t2); };
+      b.addEventListener("pointerdown", e => { e.preventDefault(); touched[zone] = Date.now(); go(); t1 = setTimeout(() => { t2 = setInterval(go, 140); }, 420); });
+      for (const ev of ["pointerup", "pointerleave", "pointercancel"]) b.addEventListener(ev, stop);
+      b.addEventListener("contextmenu", e => e.preventDefault());
+    }
+  }
+}
+function setLocalVol(zone, v) { local[zone] = v; const s = q(zone, "slider"); s.value = v; s._fill(); q(zone, "vol").textContent = fmtDb(v); }
+function queueVolume(zone, v) { local[zone] = v; const st = sender[zone] || (sender[zone] = { busy: false, pending: null }); st.pending = v; pump(zone); }
+async function pump(zone) {
+  const st = sender[zone]; if (st.busy || st.pending == null) return;
+  const v = st.pending; st.pending = null; st.busy = true;
+  try { await api("api/cmd", { zone, cmd: "volume", value: v }); } catch (e) { toast("✕ " + e.message); }
+  st.busy = false;
+  if (st.pending != null) setTimeout(() => pump(zone), 60); else { delete local[zone]; setTimeout(refresh, 400); }
+}
+
+// ---------- jedno miejsce na kliknięcia ----------
+document.addEventListener("click", async e => {
+  const t = e.target.closest("button, [data-st]"); if (!t) return;
+  if (t.closest("dialog")) return;
+  const zone = t.dataset.z, act = t.dataset.act;
+  if (act === "z2open") setMoreView("zone2");
+  else if (act === "z2back") setMoreView("root");
+  else if (act === "update") openUpdate();
+  else if (act === "versions") showVersions();
+  else if (act === "power") { const on = !(S && S[zone].power); cmd(zone, "power", on); if (S) { S[zone].power = on; render(); } }
+  else if (act === "mute") { const m = !(S && S[zone].mute); cmd(zone, "mute", m); if (S) { S[zone].mute = m; render(); } }
+  else if (act === "more") { showAll[zone] = !showAll[zone]; render(); }
+  else if (t.dataset.preset != null) { const v = +t.dataset.preset; touched[zone] = Date.now(); setLocalVol(zone, v); queueVolume(zone, v); }
+  else if (t.dataset.source) { cmd(zone, "source", t.dataset.source); if (S) { S[zone].source = t.dataset.source; render(); } }
+  else if (t.dataset.surround) { cmd(zone, "surround", t.dataset.surround); if (S) { S[zone].surround = t.dataset.surround; render(); } }
+  else if (t.dataset.st != null) playStation(zone, t.dataset.st);
+  else if (t.dataset.tn) tunerCmd(t.dataset.tn);
+  else if (act === "sndopen") { setMoreView("sound"); loadSound(); }
+  else if (act === "sndback") setMoreView("root");
+  else if (t.dataset.snd && snd) {
+    const k = t.dataset.snd;
+    if (k === "tone") sendSound("tone", !snd.tone);
+    else if (k === "dyneq") sendSound("dyneq", !snd.dyneq);
+    else if (k === "bass" || k === "treble") sendSound(k, Math.max(-6, Math.min(6, snd[k] + (+t.dataset.d))));
+    else if (k === "sleep") sendSound("sleep", +t.dataset.v);
+    else if (k === "dynvol") sendSound("dynvol", t.dataset.v);
+  }
+});
+async function playStation(zone, name) {
+  if (radioBusy) return;
+  radioBusy = true; renderRadio(); for (const z of ZONES) { const n = q(z, "nowline"); if (n) n.textContent = "Ustawiam: " + name + "…"; }
+  try { await api("api/radio", { zone, name }); toast("✓ " + name); } catch (err) { toast("✕ " + err.message); }
+  radioBusy = false; await loadRadio(); refresh();
+}
+
+// ---------- render ----------
+function render() {
+  if (!S) return;
+  const online = S.ok !== false, stat = $("#stat");
+  if (DEMO) { stat.className = "badge warn"; stat.textContent = "Tryb demo"; }
+  else { stat.className = "badge " + (online ? "ok" : "bad"); stat.textContent = online ? "● Połączono" : "✕ Brak łączności"; }
+  const b = $("#banner");
+  if (!online) { b.textContent = "✕ " + (S.error || "Amplituner nie odpowiada. Sprawdź, czy jest podłączony do prądu i do sieci."); b.classList.add("show"); } else b.classList.remove("show");
+  for (const zone of ZONES) {
+    const d = S[zone]; if (!d) continue;
+    const root = document.querySelector(`.zone[data-zone="${zone}"]`);
+    root.classList.toggle("off", !d.power); root.classList.toggle("muted", !!d.mute);
+    const pw = $('[data-act="power"]', root); pw.classList.toggle("on", !!d.power); pw.setAttribute("aria-pressed", !!d.power);
+    const mb = $('[data-act="mute"]', root); mb.classList.toggle("on", !!d.mute); mb.textContent = d.mute ? "▲ Wyciszone" : "Wycisz";
+    const busy = Date.now() - touched[zone] < 1600 || zone in local;
+    if (!busy && d.volume != null) { const s = q(zone, "slider"); s.value = d.volume; s._fill(); q(zone, "vol").textContent = fmtDb(d.volume); }
+    const pr = q(zone, "presets");
+    if (!pr.childElementCount) pr.innerHTML = PRESETS.map(p => `<button class="chip" data-z="${zone}" data-preset="${p}">${fmtDb(p).replace(",0", "")} dB</button>`).join("");
+    for (const c of pr.children) c.classList.toggle("on", d.volume != null && Math.abs(d.volume - (+c.dataset.preset)) < 0.26);
+    const used = S.sources.filter(s => s.used), rest = S.sources.filter(s => !s.used);
+    const list = showAll[zone] ? S.sources : used.concat(rest.filter(s => s.code === d.source));
+    const srcHtml = list.map(s => `<button class="li${s.code === d.source ? " on" : ""}" data-z="${zone}" data-source="${esc(s.code)}"><span class="lt">${esc(s.name)}</span><span class="ck">✓</span></button>`).join("");
+    for (const el of qa(zone, "sources")) el.innerHTML = srcHtml;
+    for (const more of document.querySelectorAll(`[data-act="more"][data-z="${zone}"]`)) { more.hidden = rest.length === 0; more.textContent = showAll[zone] ? "Ukryj nieużywane wejścia" : `Pokaż wszystkie wejścia (${rest.length} nieużywanych)`; }
+    if (zone === "main") {
+      q("main", "surrounds").innerHTML = S.surrounds.map(s => `<button class="li${d.surround && d.surround.toUpperCase().startsWith(s.code) ? " on" : ""}" data-z="main" data-surround="${esc(s.code)}"><span class="lt">${esc(s.name)}</span><span class="ck">✓</span></button>`).join("");
+    }
+    const srcObj = S.sources.find(s => s.code === d.source);
+    let sub = d.power ? (srcObj ? srcObj.name : (d.source || "–")) : "Wyłączona";
+    if (d.power && d.source === "NET/USB" && radio.now && radio.now.station) sub += " · " + radio.now.station;
+    q(zone, "sub").textContent = sub;
+    if (zone === "zone2") $("#z2sub").textContent = d.power ? "Włączona · " + fmtDb(d.volume) + " dB" : "Wyłączona";
+  }
+  renderRadio(); renderNow();
+}
+function renderRadio() {
+  if (!S) return;
+  for (const zone of ZONES) {
+    const els = qa(zone, "stations"); if (!els.length) continue;
+    const playing = S[zone] && S[zone].power && S[zone].source === "NET/USB" && radio.now;
+    const cur = playing ? radio.now.station : null, off = !(S[zone] && S[zone].power);
+    const html = radio.stations.length ? radio.stations.map(n => `<button class="li${n === cur ? " on" : ""}" data-z="${zone}" data-st="${esc(n)}"${radioBusy || off ? " disabled" : ""}><span class="lt">${esc(n)}</span><span class="ck">✓</span></button>`).join("") : '<div class="empty">Ładuję stacje…</div>';
+    for (const el of els) el.innerHTML = html;
+    const nl = q(zone, "nowline");
+    if (nl && !radioBusy) nl.textContent = "Ulubione stacje z amplitunera. Ustawienie stacji trwa kilka sekund.";
+  }
+}
+function renderNow() {
+  const pl = S && S.main && S.main.power && S.main.source === "NET/USB" && radio.now && (radio.now.track || radio.now.station);
+  $("#nowcard").hidden = !pl;
+  if (pl) { $("#nowTrack").textContent = radio.now.track || radio.now.station; $("#nowSub").textContent = [radio.now.track ? radio.now.station : "", radio.now.info].filter(Boolean).join(" · "); }
+}
+// ---------- tuner FM ----------
+let tuner = null, tunerBusy = false;
+async function loadTuner() { if (tunerBusy) return; try { tuner = await api("api/tuner"); } catch (e) { tuner = null; } renderTuner(); }
+function renderTuner() {
+  const on = !!(tuner && tuner.active);
+  $("#tnFreq").textContent = tuner && tuner.freq ? tuner.freq.replace(".", ",") : "–";
+  $("#tnPre").textContent = tuner ? (tuner.band || "FM") + (tuner.preset ? " · preset " + tuner.preset : "") : "Brak odczytu";
+  $("#tnBtns").style.display = on ? "" : "none";
+  $("#tnOn").style.display = on ? "none" : "";
+  $("#tnOn").disabled = !(tuner && tuner.power);
+}
+async function tunerCmd(c) {
+  if (tunerBusy) return; tunerBusy = true;
+  try { tuner = await api("api/tuner", { cmd: c }); renderTuner(); refresh(); } catch (e) { toast("✕ " + e.message); }
+  tunerBusy = false;
+}
+// ---------- dźwięk ----------
+let snd = null;
+const SLEEP_OPT = [[0, "Wyłączony"], [15, "15 min"], [30, "30 min"], [60, "60 min"], [90, "90 min"], [120, "120 min"]];
+const DYN_OPT = [["OFF", "Wyłączony"], ["LIT", "Lekki"], ["MED", "Średni"], ["HEV", "Mocny"]];
+const fdB = v => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v) + " dB";
+async function loadSound() { try { snd = await api("api/sound"); } catch (e) { return; } renderSound(); }
+function renderSound() {
+  if (!snd) return;
+  $("#sndToneV").textContent = snd.tone ? "Włączona" : "Wyłączona"; $("#sndTone").classList.toggle("on", snd.tone);
+  $("#sndBass").textContent = fdB(snd.bass); $("#sndTreble").textContent = fdB(snd.treble);
+  for (const b of document.querySelectorAll('[data-snd="bass"],[data-snd="treble"]')) b.disabled = !snd.tone;
+  $("#sndSleep").innerHTML = SLEEP_OPT.map(([m, n]) => `<button class="li${snd.sleep === m ? " on" : ""}" data-snd="sleep" data-v="${m}"><span class="lt">${n}</span><span class="ck">✓</span></button>`).join("");
+  $("#sndDyn").innerHTML = DYN_OPT.map(([c, n]) => `<button class="li${snd.dynvol === c ? " on" : ""}" data-snd="dynvol" data-v="${c}"><span class="lt">${n}</span><span class="ck">✓</span></button>`).join("");
+  $("#sndDynEqV").textContent = snd.dyneq ? "Włączony" : "Wyłączony"; $("#sndDynEq").classList.toggle("on", snd.dyneq);
+  $("#sndsub").textContent = snd.sleep ? "Uśpienie " + snd.sleep + " min" : (snd.tone ? "Tony włączone" : "");
+}
+async function sendSound(cmd, value) {
+  if (snd) { snd[cmd === "tone" ? "tone" : cmd === "dyneq" ? "dyneq" : cmd] = value; renderSound(); }
+  try { snd = await api("api/sound", { cmd, value }); renderSound(); } catch (e) { toast("✕ " + e.message); loadSound(); }
+}
+async function refresh() {
+  try { S = await api("api/state"); }
+  catch (e) { S = Object.assign(S || { main: {}, zone2: {}, sources: [], surrounds: [] }, { ok: false, error: "Brak połączenia z serwerem: " + e.message }); }
+  render();
+}
+async function loadRadio() { try { radio = await api("api/radio"); } catch (e) { return; } render(); }
+setInterval(() => { if (!document.hidden) refresh(); }, 2500);
+setInterval(() => { if (!document.hidden && !radioBusy) loadRadio(); }, 5000);
+setInterval(() => { if (document.hidden) return; if (curTab === "radio") loadTuner(); if (curTab === "more" && !document.querySelector('[data-view="sound"]').hidden) loadSound(); }, 5000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
+
+// ---------- sceny ----------
+async function loadScenes() {
+  try { scenes = await api("api/scenes"); } catch (e) { scenes = []; }
+  $("#sceneList").innerHTML = scenes.length ? scenes.map(s => `<div class="li sr" style="padding-right:0"><button class="li" style="flex:1;padding:0;min-height:52px" data-apply="${esc(s.id)}"><span class="lt">${esc(s.name)}</span></button><button class="x li" style="width:56px;flex:none;justify-content:center;padding:0" data-del="${esc(s.id)}" aria-label="Usuń scenę ${esc(s.name)}">✕</button></div>`).join("") : '<div class="empty">Nie masz jeszcze scen. Ustaw amplituner tak, jak lubisz, i zapisz stan poniżej.</div>';
+}
+$("#sceneList").addEventListener("click", async e => {
+  const a = e.target.closest("[data-apply]"), d = e.target.closest("[data-del]");
+  try {
+    if (a) { toast("Ustawiam scenę…"); await api("api/scenes/apply", { id: a.dataset.apply }); toast("✓ Scena ustawiona"); refresh(); }
+    if (d) { if (d.dataset.armed) { await api("api/scenes/delete", { id: d.dataset.del }); loadScenes(); } else { d.dataset.armed = 1; d.textContent = "Usunąć?"; d.style.color = "var(--err)"; d.style.width = "80px"; setTimeout(loadScenes, 2500); } }
+  } catch (err) { toast("✕ " + err.message); }
+});
+$("#sceneSave").onclick = async () => {
+  const name = $("#sceneName").value.trim(); if (!name) { toast("✕ Podaj nazwę sceny"); return; }
+  try { await api("api/scenes", { name }); $("#sceneName").value = ""; toast("✓ Zapisano scenę „" + name + "”"); loadScenes(); } catch (e) { toast("✕ " + e.message); }
+};
+$("#standby").onclick = async function () {
+  const label = "Wyłącz cały amplituner";
+  if (!this.classList.contains("arm")) { this.classList.add("arm"); this.textContent = "Na pewno? Dotknij ponownie"; setTimeout(() => { this.classList.remove("arm"); this.textContent = label; }, 3500); return; }
+  this.classList.remove("arm"); this.textContent = label; await cmd("main", "standby", true); toast("Amplituner przechodzi w czuwanie");
+};
+
+// ---------- Więcej: podmenu strefy 2 ----------
+function setMoreView(v) {
+  for (const el of document.querySelectorAll('[data-page="more"] [data-view]')) el.hidden = el.dataset.view !== v;
+  $("#pages").scrollTop = 0;
+}
+
+// ---------- wersje i aktualizacja (ekran Hi-Fi: updater.js) ----------
+const APP_VERSION = "2.1.2";
+function openUpdate() { if (!$("#pud") || !$("#pud").open) PilotUpdater.open({ test: DEMO, onDone: () => location.reload() }); }
+function busyNow() {
+  const a = document.activeElement;
+  const typing = a && a.tagName === "INPUT" && a.type === "text" && a.value;
+  const adjusting = Date.now() - Math.max(touched.main, touched.zone2) < 4000 || Object.keys(local).length > 0;
+  return !!(typing || adjusting);
+}
+let newer = false;
+async function checkVersion() {
+  try {
+    const v = await (await fetch("version.json?v=" + Date.now(), { cache: "no-store" })).json();
+    window._ver = v; $("#verTxt").textContent = APP_VERSION; $("#verFoot").textContent = "Wersja " + APP_VERSION;
+    if (v.version !== APP_VERSION) {
+      if (!busyNow()) { $("#updbar").classList.remove("show"); openUpdate(); }
+      else { newer = true; $("#updbar").classList.add("show"); }
+    }
+  } catch (e) {}
+}
+setInterval(() => { if (newer && !busyNow()) { newer = false; $("#updbar").classList.remove("show"); openUpdate(); } else checkVersion(); }, 60000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) checkVersion(); });
+addEventListener("pageshow", () => checkVersion());
+$("#updnow").onclick = () => openUpdate();
+async function showVersions() {
+  try { window._ver = await (await fetch("version.json?v=" + Date.now(), { cache: "no-store" })).json(); } catch (e) {}
+  const v = window._ver; if (!v) return;
+  $("#verList").innerHTML = v.history.map(x => `<p style="margin:10px 0 2px"><b>${esc(x.version)}</b> <span style="color:var(--text3);font-size:14px">${esc(x.date)}</span></p><ul style="margin:0 0 6px;padding-left:20px;font-size:15px">${x.changes.map(c => `<li>${esc(c)}</li>`).join("")}</ul>`).join("");
+  $("#verDlg").showModal();
+}
+$("#verClose").onclick = () => $("#verDlg").close();
+
+// ---------- zakładki ----------
+const scrollTop = {};
+let curTab = null;
+function showTab(id, fromMenu) {
+  const pages = $("#pages");
+  if (curTab) scrollTop[curTab] = pages.scrollTop;
+  curTab = id;
+  $("#hero").classList.toggle("gone", id !== "listen" && id !== "radio");
+  for (const p of document.querySelectorAll(".page")) p.classList.toggle("show", p.dataset.page === id);
+  pages.scrollTop = scrollTop[id] || 0;
+  if (location.hash !== "#" + id) history.replaceState(null, "", "#" + id);
+  if (!fromMenu && menu) menu.select(id);
+}
+let menu = null;
+build();
+const first = TABS.some(t => "#" + t.id === location.hash) ? location.hash.slice(1) : "listen";
+menu = PilotMenu.mount($("#nav"), TABS, first, id => showTab(id, true));
+showTab(first, true);
+addEventListener("hashchange", () => { const id = location.hash.slice(1); if (TABS.some(t => t.id === id) && id !== curTab) showTab(id, false); });
+refresh(); loadScenes(); loadRadio(); checkVersion(); loadTuner();
+</script>
+</body>
+</html>
