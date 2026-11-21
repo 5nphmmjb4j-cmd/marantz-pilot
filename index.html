@@ -64,6 +64,26 @@ input[type=range]::-moz-range-track{height:8px;border-radius:4px;background:var(
 input[type=range]::-moz-range-progress{height:8px;border-radius:4px;background:var(--primary)}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:30px;height:30px;border-radius:50%;background:#fff;border:3px solid var(--primary);margin-top:-11px;box-shadow:0 2px 6px rgba(23,33,43,.2)}
 input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#fff;border:3px solid var(--primary)}
+/* gałka głośności (układ "Pokrętło") */
+.knob{position:relative;width:224px;height:224px;margin:6px auto 4px;touch-action:none;user-select:none;-webkit-user-select:none;--p:.5;outline:0}
+.knob .ring{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 225deg,var(--primary) 0 calc(var(--p)*75%),var(--border) calc(var(--p)*75%) 75%,transparent 75% 100%)}
+.knob .face{position:absolute;inset:24px;border-radius:50%;background:var(--surface);box-shadow:0 1px 6px rgba(23,33,43,.14);display:grid;place-items:center;text-align:center}
+.knob .hd{position:absolute;inset:0;pointer-events:none;transform:rotate(calc(var(--p)*270deg - 135deg))}
+.knob .hd span{position:absolute;left:50%;top:4px;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:var(--primary);box-shadow:0 0 0 3px #fff}
+.knob:focus-visible .ring{box-shadow:0 0 0 3px var(--focus)}
+.knob .vol{display:block;margin:0}
+.knob .vol .n{display:block;font-size:40px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;line-height:1}
+.knob .vol .u{display:block;margin-top:4px;font-size:12px;letter-spacing:.12em}
+.knob .vol .lbl{display:none}
+.knob .vol .m{margin:6px 0 0;font-size:11px}
+.knob input[type=range]{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}
+.list.keys{display:grid;grid-template-columns:1fr 1fr;gap:8px;background:none;overflow:visible;border-radius:0}
+.keys .li{min-height:56px;padding:0 14px;gap:10px;border-radius:16px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--sep);width:auto}
+.keys .li::before{display:none!important}
+.keys .li::after{content:"";order:-1;width:8px;height:8px;border-radius:50%;background:var(--border);flex:none}
+.keys .li.on{box-shadow:inset 0 0 0 1.5px var(--primary)}
+.keys .li.on::after{background:var(--primary);box-shadow:0 0 6px rgba(15,76,92,.55)}
+.keys .li .ck{display:none}
 .vrow{display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:8px;margin:4px 0 8px}
 .btn{min-height:44px;padding:0 16px;border-radius:var(--radius-s);border:0;background:var(--soft);font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:8px;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;transition:transform .12s,background .15s}
 .btn:active{transform:scale(.97);background:var(--border)}
@@ -137,7 +157,7 @@ dialog p{margin:0 0 14px;color:var(--text2);font-size:15px}
 <div class="pages" id="pages">
   <section class="page" data-page="listen" aria-label="Słuchaj">
     <div class="gh">Wejście</div>
-    <div class="list" data-r="sources" data-z="main"></div>
+    <div class="list keys" data-r="sources" data-z="main"></div>
     <button class="more" data-act="more" data-z="main" hidden></button>
     <div class="gh">Tryb dźwięku</div>
     <div class="list" data-r="surrounds" data-z="main"></div>
@@ -268,8 +288,12 @@ function volBlock(zone) {
     <div class="hhd"><div class="t"><div class="cap">${ZNAME[zone]}</div><div class="sub" data-r="sub" data-z="${zone}">–</div></div>
       <button class="pwr" data-act="power" data-z="${zone}" aria-label="Włącz lub wyłącz: ${ZNAME[zone]}" aria-pressed="false">${ICON.power}</button></div>
     <div class="body">
-      <div class="vol"><span class="n" data-r="vol" data-z="${zone}">–</span><span class="u">dB</span><span class="lbl">Głośność</span><span class="badge warn m">▲ Wyciszone</span></div>
-      <input type="range" min="-80" max="18" step="0.5" value="-60" data-r="slider" data-z="${zone}" aria-label="Głośność: ${ZNAME[zone]}">
+      <div class="knob" data-r="knob" data-z="${zone}" role="slider" tabindex="0" aria-label="Głośność: ${ZNAME[zone]}" aria-valuemin="-80" aria-valuemax="18">
+        <div class="ring"></div>
+        <div class="face"><div class="vol"><span class="n" data-r="vol" data-z="${zone}">–</span><span class="u">dB</span><span class="lbl">Głośność</span><span class="badge warn m">▲ Wyciszone</span></div></div>
+        <div class="hd"><span></span></div>
+        <input type="range" min="-80" max="18" step="0.5" value="-60" data-r="slider" data-z="${zone}" tabindex="-1" aria-hidden="true">
+      </div>
       <div class="vrow">
         <button class="btn step" data-step="-1" data-z="${zone}" aria-label="Ciszej">−</button>
         <button class="btn mute" data-act="mute" data-z="${zone}">Wycisz</button>
@@ -283,7 +307,24 @@ function build() {
   $("#zone2").innerHTML = volBlock("zone2");
   for (const zone of ZONES) {
     const slider = q(zone, "slider");
-    slider._fill = () => slider.style.setProperty("--fill", ((slider.value - slider.min) / (slider.max - slider.min) * 100) + "%");
+    const knob = q(zone, "knob");
+    slider._fill = () => { const p = (slider.value - slider.min) / (slider.max - slider.min); knob.style.setProperty("--p", p); knob.setAttribute("aria-valuenow", slider.value); knob.setAttribute("aria-valuetext", fmtDb(+slider.value) + " dB"); };
+    const setFromPointer = e => {
+      const r = knob.getBoundingClientRect(), dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+      let a = Math.atan2(dx, -dy) * 180 / Math.PI;               // 0 = góra, + = zgodnie z zegarem
+      a = Math.max(-135, Math.min(135, a));                       // martwa strefa na dole
+      if (Math.abs(Math.atan2(dx, -dy) * 180 / Math.PI) > 135) a = (dx < 0) ? -135 : 135;
+      const v = Math.round((slider.min * 1 + (a + 135) / 270 * (slider.max - slider.min)) * 2) / 2;
+      if (v !== +slider.value) { slider.value = v; slider.dispatchEvent(new Event("input")); }
+    };
+    let drag = false;
+    knob.addEventListener("pointerdown", e => { drag = true; knob.setPointerCapture(e.pointerId); knob.focus({ preventScroll: true }); setFromPointer(e); });
+    knob.addEventListener("pointermove", e => { if (drag) setFromPointer(e); });
+    for (const ev of ["pointerup", "pointercancel"]) knob.addEventListener(ev, () => { drag = false; });
+    knob.addEventListener("keydown", e => {
+      const k = { ArrowUp: .5, ArrowRight: .5, ArrowDown: -.5, ArrowLeft: -.5, PageUp: 5, PageDown: -5 }[e.key]; if (k == null) return;
+      e.preventDefault(); slider.value = Math.max(-80, Math.min(18, +slider.value + k)); slider.dispatchEvent(new Event("input"));
+    });
     slider.addEventListener("input", () => { touched[zone] = Date.now(); slider._fill(); q(zone, "vol").textContent = fmtDb(+slider.value); queueVolume(zone, +slider.value); });
     for (const b of document.querySelectorAll(`[data-step][data-z="${zone}"]`)) {
       const step = +b.dataset.step; let t1, t2;
@@ -472,7 +513,7 @@ function setMoreView(v) {
 }
 
 // ---------- wersje i aktualizacja (ekran Hi-Fi: updater.js) ----------
-const APP_VERSION = "2.1.3";
+const APP_VERSION = "2.2.0";
 function openUpdate() { if (!$("#pud") || !$("#pud").open) PilotUpdater.open({ test: DEMO, onDone: () => location.reload() }); }
 function busyNow() {
   const a = document.activeElement;
